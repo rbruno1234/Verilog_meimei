@@ -6,6 +6,7 @@ module top_vga(
 			   input left,
 			   input up,
 			   input down,
+			   input shoot,
 			   // VGA outputs
 			   output wire [3:0] vgaRed,
 			   output wire [3:0] vgaGreen,
@@ -34,7 +35,21 @@ module top_vga(
    localparam BALL_COLOR = 12'h0f0;
    localparam EMPTY_COLOR = 12'hfff;
    localparam P_COLOR = 12'hf0f;
-   
+
+wire [1:0] data;
+reg [1:0] LFSRhold;
+LFSR3 temp (
+    .clk(clk),
+    .o_data(data)
+    );
+    
+    always@(posedge clk)begin
+        if(rst==1)begin
+            LFSRhold <= data;
+        end
+    end
+
+  
   //assign score = 8'h0f;
 
    //---------------------------------------------
@@ -51,6 +66,11 @@ module top_vga(
 		       .hblank (hblank),
 		       .vblank (vblank)
 		       );
+wire drawbullet;
+wire [9:0] paddlex,paddley;
+wire  bullbroke;
+
+//assign unbullet=bullbroke == 1 ? 1:0;
 
    ball #(100,30,0,0) u_ball_1 ( 
 		  // Outputs
@@ -63,7 +83,7 @@ module top_vga(
 		  .rst			(rst),
 		  .hcount		(hcount[9:0]),
 		  .vcount		(vcount[9:0]),
-		  .empty		(empty & ~draw_ball2 & ~draw_paddle & ~(|draw_block[23:0])),
+		  .empty		(empty & ~draw_ball2 & ~draw_paddle & ~(|draw_block[23:0]) & ~drawbullet),
 		  .move			(move));
 		  
     bigball #(500,300,0,0) u_ball_2 ( 
@@ -77,13 +97,14 @@ module top_vga(
 		  .rst			(rst),
 		  .hcount		(hcount[9:0]),
 		  .vcount		(vcount[9:0]),
-		  .empty		(empty & ~draw_ball & ~draw_paddle & ~(|draw_block[23:0])),
+		  .empty		(empty & ~draw_ball & ~draw_paddle & ~(|draw_block[23:0])& ~drawbullet),
 		  .move			(move));
+
    paddle #(320, 430,0,0) pad(
 		  // Outputs
 		  .draw_ball		(draw_paddle),
-		  .xloc			(),
-		  .yloc			(),
+		  .xloc			(paddlex),
+		  .yloc			(paddley),
 		  // Inputs
 		  .press        (press),
 		  .clk			(clk),
@@ -94,6 +115,25 @@ module top_vga(
 		  .empty		(empty & ~draw_ball & ~draw_ball2 ),
 		  .move			(move));
 
+
+
+   bull #(5,5,0)
+   (
+    .clk			(clk),
+	.pixpulse             (pixpulse),
+	.rst            (rst),
+	.shoot			(shoot),
+    .hcount		(hcount[9:0]),
+	.vcount		(vcount[9:0]),
+    .xloc_start(paddlex),
+    .yloc_start(paddley),
+    .empty(empty & ~(|draw_block[23:0])), // is this pixel empty
+    .move(move), // signal to update the location of the ball
+    .draw_ball(drawbullet), // is the ball being drawn here?
+    .xloc(), // x-location of the ball
+    .yloc(), // y-location of the ball
+    .broken(bullbroke)
+    );
 
 reg [5:0] scorestore;
 reg [5:0] count;
@@ -126,7 +166,7 @@ end
     .rst(rst),
     .hcount(hcount), // x-location where we are drawing
     .vcount(vcount), // y-location where we are drawing
-    .empty(empty & ~draw_ball & ~draw_ball2), // is this pixel empty
+    .empty(empty & ~draw_ball & ~draw_ball2 & ~drawbullet), // is this pixel empty
     .move(move), // signal to update the status of the block
     .unbreak(unbreak),  // reset the block
     .draw_block(draw_block[i]), // is the block being drawn here?
@@ -148,7 +188,7 @@ end
     .rst(rst),
     .hcount(hcount), // x-location where we are drawing
     .vcount(vcount), // y-location where we are drawing
-    .empty(empty & ~draw_ball & ~draw_ball2), // is this pixel empty
+    .empty(empty & ~draw_ball & ~draw_ball2 & ~drawbullet), // is this pixel empty
     .move(move), // signal to update the status of the block
     .unbreak(unbreak),  // reset the block
     .draw_block(draw_block[i]), // is the block being drawn here?
@@ -175,7 +215,7 @@ end
         
    assign unbreak = broken[23:0] == 24'hffffff ? 1 : 0;
 
-   assign is_a_wall = (((hcount < 5) | (hcount > 625) | (vcount < 5) | (vcount > 475))||((hcount < 115) && (hcount > 110) && (vcount < 450) && (vcount > 150)));
+   assign is_a_wall = (((hcount < 5) | (hcount > 625) | (vcount < 5) | (vcount > 475))||((hcount < 115+150*LFSRhold) && (hcount > 110+150*LFSRhold) && (vcount < 450) && (vcount > 150)));
    
    assign press={down, up, left, right};
 
@@ -194,7 +234,7 @@ end
    // Register the current pixel
    always @(posedge clk) begin
       if (pixpulse)
-        current_pixel <= (is_a_wall) ? WALL_COLOR : ( (draw_ball | draw_ball2 | draw_paddle| draw_block) ? BALL_COLOR : (( draw_score )? P_COLOR : EMPTY_COLOR ));
+        current_pixel <= (is_a_wall) ? WALL_COLOR : ( (draw_ball | draw_ball2 | draw_paddle| draw_block) ? BALL_COLOR : (( draw_score|drawbullet )? P_COLOR : EMPTY_COLOR ));
    end
 
    // Map 12-bit to 4:4:4
