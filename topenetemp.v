@@ -35,9 +35,13 @@ module top_vga(
    localparam BALL_COLOR = 12'h0f0;
    localparam EMPTY_COLOR = 12'hfff;
    localparam P_COLOR = 12'hf0f;
+   
 
 wire [1:0] data;
 reg [1:0] LFSRhold;
+
+
+
 LFSR3 temp (
     .clk(clk),
     .o_data(data)
@@ -119,6 +123,9 @@ begin
 end
 end
    assign score = scorestore;
+   
+wire [2:0] emptyinput;
+assign emptyinput={empty, ~(|draw_block[23:0]), ~drawbullet};
 
    genvar i;
    generate
@@ -138,7 +145,7 @@ end
     .vcount(vcount), // y-location where we are drawing
     .xloc_start(30+i*50),
     .yloc_start(100),
-    .empty(empty & ~(|draw_block[23:0]) & ~drawbullet), // is this pixel empty
+    .empty(emptyinput), // is this pixel empty ||||| empty & ~(|draw_block[23:0]) & ~drawbullet
     .move(move), // signal to update the status of the block
     .xdir_start(LFSRhold[0]),
     .ydir_start(LFSRhold[1]),
@@ -161,7 +168,7 @@ end
     .vcount(vcount), // y-location where we are drawing
     .xloc_start(30+i*50),
     .yloc_start(200),
-    .empty(empty & ~(|draw_block[23:0]) & ~drawbullet), // is this pixel empty
+    .empty(emptyinput), // is this pixel empty
     .move(move), // signal to update the status of the block
     .xdir_start(LFSRhold[1]),
     .ydir_start(LFSRhold[0]),
