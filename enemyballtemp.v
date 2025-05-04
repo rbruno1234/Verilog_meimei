@@ -34,7 +34,7 @@ module ene #(parameter xsize=21,
     input [9:0]	     vcount, // y-location where we are drawing
     input[9:0]       xloc_start,
     input[9:0]       yloc_start,
-    input	     empty, // is this pixel empty
+    input[2:0]	     empty, // is this pixel empty
     input	     move, // signal to update the location of the ball
     input       xdir_start,
     input       ydir_start,
@@ -42,6 +42,8 @@ module ene #(parameter xsize=21,
     output reg [9:0] xloc, // x-location of the ball
     output reg [9:0] yloc // y-location of the ball
     );
+
+   wire emptystore=(&empty[2:0]);
 
    reg [xsize+1:0]			 occupied_lft;
    reg [xsize+1:0]			 occupied_rgt;
@@ -75,18 +77,18 @@ module ene #(parameter xsize=21,
 	      occupied_rgt <= 0;
 	      occupied_bot <= 0;
 	      occupied_top <= 0;
-	   end else if (~empty) begin
+	   end else if (~emptystore) begin
 	      if (vcount >= yloc-(1+(ysize-1)/2) && vcount <= yloc+(1+(ysize-1)/2)) 
 		if (hcount == xloc+(1+(xsize-1)/2))
-		  occupied_rgt[(yloc-vcount+(1+(ysize-1)/2))] <= ~empty;  // LSB is at bottom
+		  occupied_rgt[(yloc-vcount+(1+(ysize-1)/2))] <= ~emptystore;  // LSB is at bottom
 		else if (hcount == xloc-(1+(xsize-1)/2))
-		  occupied_lft[(yloc-vcount+(1+(ysize-1)/2))] <= ~empty;
+		  occupied_lft[(yloc-vcount+(1+(ysize-1)/2))] <= ~emptystore;
 	      
 	      if (hcount >= xloc-(1+(xsize-1)/2) && hcount <= xloc+(1+(xsize-1)/2)) 
 		if (vcount == yloc+(1+(ysize-1)/2))
-		  occupied_bot[(xloc-hcount+(1+(xsize-1)/2))] <= ~empty;  // LSB is at right
+		  occupied_bot[(xloc-hcount+(1+(xsize-1)/2))] <= ~emptystore;  // LSB is at right
 		else if (vcount == yloc-(1+(ysize-1)/2))
-		  occupied_top[(xloc-hcount+(1+(xsize-1)/2))] <= ~empty;
+		  occupied_top[(xloc-hcount+(1+(xsize-1)/2))] <= ~emptystore;
 	   end
 	end
      end	      
