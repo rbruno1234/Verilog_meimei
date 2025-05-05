@@ -27,7 +27,7 @@ module top_vga(
    reg [11:0] current_pixel;
    reg vblank_d1;
    wire unbreak;
-   wire [11:0] broken;
+   wire [15:0] broken;
    wire [7:0] score;
     
 
@@ -77,7 +77,7 @@ wire  bullbroke;
 //assign unbullet=bullbroke == 1 ? 1:0;
 
 
-   paddle #(320, 430,0,0) pad(
+   paddle #(280, 430,0,0) pad(
 		  // Outputs
 		  .draw_ball		(draw_paddle),
 		  .xloc			(paddlex),
@@ -117,7 +117,7 @@ reg [5:0] count;
 always @(*) begin
 scorestore=0;
 
-for(count=0; count<12;count=count+1)
+for(count=0; count<16;count=count+1)
 begin
         scorestore=scorestore+broken[count];
 end
@@ -201,7 +201,8 @@ assign emptyinput={empty, ~(|draw_block[23:0]), ~drawbullet};
     .move(move), // signal to update the status of the block
     .draw_enep(draw_block[j]), // is the block being drawn here?
     .xloc(),
-    .yloc()
+    .yloc(),
+    .broken(broken[j])
     );
     end
   end
