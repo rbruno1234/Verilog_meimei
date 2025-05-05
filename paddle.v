@@ -120,25 +120,25 @@ module paddle #(parameter xloc_start=320,
 
 	      case ({press})
 		4'b0001: begin  // heading to the left and up
-		  if (~occupied_rgt)begin
+		  if (~(|occupied_rgt))begin
 		      xloc <= xloc + 1;
 		      end
 		   end
 		4'b0010: begin  // heading to the left and down
 		   // complete this code
-		   if (~occupied_lft)begin
+		   if (~(|occupied_lft))begin
 		      xloc <= xloc - 1;
 		      end
 		end
 		4'b0100: begin  // heading to the right and up
 		   // complete this code
-		   if (~occupied_top)begin
+		   if (~(|occupied_top))begin
 		      yloc <= yloc - 1;
 		      end
 		end
 		4'b1000: begin  // heading to the right and down
 		   // complete this code
-		   if (~occupied_bot)begin
+		   if (~(|occupied_bot))begin
 		      yloc <= yloc + 1;
 		      end
 		end
