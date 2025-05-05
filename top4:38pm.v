@@ -7,12 +7,14 @@ module top_vga(
 			   input up,
 			   input down,
 			   input shoot,
+			   input start,
 			   // VGA outputs
 			   output wire [3:0] vgaRed,
 			   output wire [3:0] vgaGreen,
 			   output wire [3:0] vgaBlue,
 			   output wire	     hsync,
-			   output wire	     vsync
+			   output wire	     vsync,
+			   output reg       death
 			   );
    wire [3:0] press;
    wire [9:0] hcount;
@@ -27,7 +29,7 @@ module top_vga(
    reg [11:0] current_pixel;
    reg vblank_d1;
    wire unbreak;
-   wire [15:0] broken;
+   wire [16:0] broken;
    wire [7:0] score;
     
 
@@ -76,12 +78,13 @@ wire  bullbroke;
 
 //assign unbullet=bullbroke == 1 ? 1:0;
 
-
+reg fuckoff=0;
    paddle #(280, 430,0,0) pad(
 		  // Outputs
 		  .draw_ball		(draw_paddle),
 		  .xloc			(paddlex),
 		  .yloc			(paddley),
+		  .broken       (broken[16]),
 		  // Inputs
 		  .press        (press),
 		  .clk			(clk),
@@ -91,6 +94,24 @@ wire  bullbroke;
 		  .vcount		(vcount[9:0]),
 		  .empty		(empty &~(|draw_block[23:0])),
 		  .move			(move));
+
+
+always@(posedge clk)    begin
+death<=0;
+
+    if(broken[16]==1||scorestore==3)       begin
+        fuckoff<=1;
+    end
+    
+    if(fuckoff==1)          begin
+    death<=1;
+    end
+    
+    if(~start)              begin
+    fuckoff<=0;
+    end
+end
+
 
 
 
@@ -229,7 +250,7 @@ endgenerate
 
    assign empty = ~is_a_wall;
 
-   assign move = (vblank & ~vblank_d1);  // move balls at start of vertical blanking
+   assign move = (vblank & ~vblank_d1)&start&~fuckoff;  // move balls at start of vertical blanking
 
    always @(posedge clk or posedge rst) begin
       if (rst) begin
