@@ -89,7 +89,7 @@ wire  bullbroke;
 		  .rst			(rst),
 		  .hcount		(hcount[9:0]),
 		  .vcount		(vcount[9:0]),
-		  .empty		(empty),
+		  .empty		(empty &~(|draw_block[23:0])),
 		  .move			(move));
 
 
@@ -151,10 +151,11 @@ assign emptyinput={empty, ~(|draw_block[23:0]), ~drawbullet};
     .ydir_start(LFSRhold[1]),
     .draw_ene(draw_block[i]), // is the block being drawn here?
     .xloc(),
-    .yloc()
+    .yloc(),
+    .broken(broken[i])
      );
      end
-     else if(i<12) begin
+     else
      ene #(
         .xsize(21),
         .ysize(21)
@@ -167,24 +168,25 @@ assign emptyinput={empty, ~(|draw_block[23:0]), ~drawbullet};
     .hcount(hcount), // x-location where we are drawing
     .vcount(vcount), // y-location where we are drawing
     .xloc_start(30+i*50),
-    .yloc_start(200),
+    .yloc_start(50),
     .empty(emptyinput), // is this pixel empty
     .move(move), // signal to update the status of the block
     .xdir_start(LFSRhold[1]),
     .ydir_start(LFSRhold[0]),
     .draw_ene(draw_block[i]), // is the block being drawn here?
     .xloc(),
-    .yloc()
+    .yloc(),
+    .broken(broken[i])
      );
-     end
+
      end
    endgenerate      
    
  genvar j;
  generate
-      for(j=12; j<15; j=j+1)  begin:genp
+      for(j=12; j<14; j=j+1)  begin:genp
     begin   
-      enep #(21,21)
+      enep #(11,11)
      enepinst
      (
     .clk(clk), // 100 MHz system clock
@@ -192,9 +194,9 @@ assign emptyinput={empty, ~(|draw_block[23:0]), ~drawbullet};
     .rst(rst),
     .hcount(hcount), // x-location where we are drawing
     .vcount(vcount), // y-location where we are drawing
-    .xloc_start(30+(j-12)*50),
-    .yloc_start(300),
-    .xdir_start(LFSRhold[1]),
+    .xloc_start(30+(j-11)*250),
+    .yloc_start(250),
+    .xdir_start(1),
     .empty(emptyinput), // is this pixel empty
     .move(move), // signal to update the status of the block
     .draw_enep(draw_block[j]), // is the block being drawn here?
@@ -220,7 +222,7 @@ endgenerate
         
    //assign unbreak = broken[23:0] == 24'hffffff ? 1 : 0;
 
-   assign is_a_wall = (((hcount < 5) | (hcount > 625) | (vcount < 5) | (vcount > 475))||((hcount < 115+150*LFSRhold) && (hcount > 110+150*LFSRhold) && (vcount < 450) && (vcount > 150)));
+   assign is_a_wall = (((hcount < 5) | (hcount > 625) | (vcount < 5) | (vcount > 475))||((hcount < 115+50*LFSRhold) && (hcount > 110+50*LFSRhold) && (vcount < 450) && (vcount > 150))||((hcount < 325+50*LFSRhold) && (hcount > 320+50*LFSRhold) && (vcount < 450) && (vcount > 150)));
    
    assign press={down, up, left, right};
 
