@@ -44,7 +44,8 @@ module ene #(parameter xsize=21,
     );
 
    wire emptystore=(&empty[2:0]);
-
+   reg hit;
+   reg hitstore;
    reg [xsize+1:0]			 occupied_lft;
    reg [xsize+1:0]			 occupied_rgt;
    reg [ysize+1:0]			 occupied_bot;
@@ -58,7 +59,7 @@ module ene #(parameter xsize=21,
    
    // are we pointing at a pixel in the ball?
    // this will make a square ball...
-   assign draw_ene = (hcount <= xloc+((xsize-1)/2)) & (hcount >= xloc-((xsize-1)/2)) & (vcount <= yloc+((ysize-1)/2)) & (vcount >= yloc-((ysize-1)/2)) ?  1 : 0;
+   assign draw_ene = (hcount <= xloc+((xsize-1)/2)) & (hcount >= xloc-((xsize-1)/2)) & (vcount <= yloc+((ysize-1)/2)) & (vcount >= yloc-((ysize-1)/2)) ?  ~hitstore : 0;
 
    // hcount goes from 0=left to 640=right
    // vcount goes from 0=top to 480=bottom
@@ -71,27 +72,57 @@ module ene #(parameter xsize=21,
 	   occupied_rgt <= 0;
 	   occupied_bot <= 0;
 	   occupied_top <= 0;
+	   hit<=0;
 	end else if (pixpulse) begin  // only make changes when pixpulse is high
 	   if (update_neighbors) begin
 	      occupied_lft <= 0;
 	      occupied_rgt <= 0;
 	      occupied_bot <= 0;
 	      occupied_top <= 0;
-	   end else if (~emptystore) begin
-	      if (vcount >= yloc-(1+(ysize-1)/2) && vcount <= yloc+(1+(ysize-1)/2)) 
-		if (hcount == xloc+(1+(xsize-1)/2))
+	      //hit<=0;
+	   end 
+	   else if (~emptystore) begin
+	      if (vcount >= yloc-(1+(ysize-1)/2) && vcount <= yloc+(1+(ysize-1)/2)) begin
+		
+		if (hcount == xloc+(1+(xsize-1)/2))begin
 		  occupied_rgt[(yloc-vcount+(1+(ysize-1)/2))] <= ~emptystore;  // LSB is at bottom
-		else if (hcount == xloc-(1+(xsize-1)/2))
+		  //hit<=~empty[0];
+		  if(~empty[0])  begin
+		      hit<=1;
+		      end
+		  end
+		  
+		else if (hcount == xloc-(1+(xsize-1)/2)) begin
 		  occupied_lft[(yloc-vcount+(1+(ysize-1)/2))] <= ~emptystore;
+		  //hit<=~empty[0];
+		  if(~empty[0])  begin
+		      hit<=1;
+		      end
+		  end
+		 end 
 	      
-	      if (hcount >= xloc-(1+(xsize-1)/2) && hcount <= xloc+(1+(xsize-1)/2)) 
-		if (vcount == yloc+(1+(ysize-1)/2))
+	      if (hcount >= xloc-(1+(xsize-1)/2) && hcount <= xloc+(1+(xsize-1)/2)) begin
+	      
+		if (vcount == yloc+(1+(ysize-1)/2))begin
 		  occupied_bot[(xloc-hcount+(1+(xsize-1)/2))] <= ~emptystore;  // LSB is at right
-		else if (vcount == yloc-(1+(ysize-1)/2))
+		  //hit<=~empty[0];
+		  if(~empty[0])  begin
+		      hit<=1;
+		      end
+		  end		  
+		  
+		else if (vcount == yloc-(1+(ysize-1)/2))begin
 		  occupied_top[(xloc-hcount+(1+(xsize-1)/2))] <= ~emptystore;
+		  //hit<=~empty[0];
+		  if(~empty[0])  begin
+		      hit<=1;
+		      end
+		  end
+		 end
+		  
 	   end
 	end
-     end	      
+   end	      
 
 
    assign blk_lft_up = |occupied_lft[xsize:2];  // upper left pixels are blocked
@@ -117,10 +148,15 @@ module ene #(parameter xsize=21,
 	   xdir <= xdir_start;
 	   ydir <= ydir_start;
 	   update_neighbors <= 0;
+	   hitstore<=0;
 	end else if (pixpulse) begin
 	   update_neighbors <= 0; // default
 	   if (move) begin
-
+        
+        if(hit==1)begin
+        hitstore<=1;
+        end        
+        
 	      case ({xdir,ydir})
 		2'b00: begin  // heading to the left and up
 		   if (blk_lft_up | corner_lft_up) begin
