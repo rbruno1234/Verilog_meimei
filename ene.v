@@ -59,7 +59,7 @@ module ene #(parameter xsize=21,
    
    // are we pointing at a pixel in the ball?
    // this will make a square ball...
-  assign draw_ene = (hcount <= xloc+((xsize-1)/2)) & (hcount >= xloc-((xsize-1)/2)) & (vcount <= yloc+((ysize-1)/2)) & (vcount >= yloc-((ysize-1)/2)) ?  ~hitstore : 0;
+   assign draw_ene = (hcount <= xloc+((xsize-1)/2)) & (hcount >= xloc-((xsize-1)/2)) & (vcount <= yloc+((ysize-1)/2)) & (vcount >= yloc-((ysize-1)/2)) ?  ~hitstore : 0;
 
    // hcount goes from 0=left to 640=right
    // vcount goes from 0=top to 480=bottom
