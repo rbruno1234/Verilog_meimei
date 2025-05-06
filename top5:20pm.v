@@ -99,7 +99,7 @@ reg fuckoff=0;
 always@(posedge clk)    begin
 death<=0;
 
-    if(broken[16]==1||scorestore==3)       begin
+    if(broken[16]==1||scorestore==15)       begin
         fuckoff<=1;
     end
     
@@ -138,7 +138,7 @@ reg [5:0] count;
 always @(*) begin
 scorestore=0;
 
-for(count=0; count<16;count=count+1)
+for(count=0; count<17;count=count+1)
 begin
         scorestore=scorestore+broken[count];
 end
